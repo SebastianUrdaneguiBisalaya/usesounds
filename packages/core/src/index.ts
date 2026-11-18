@@ -4,6 +4,8 @@ export {
   SoundPlaybackError,
   UsesoundsError,
 } from "./errors.js";
+export type { PresetName, SoundName } from "./presets.js";
+export { presetNames, presets } from "./presets.js";
 export type {
   SynthNoiseVoice,
   SynthSound,
