@@ -43,15 +43,30 @@ jobs:
       - name: Build
         run: bun run build
 
-      # For every publishable package: skip it if its version is already on npm,
-      # otherwise pack it with Bun (rewrites `workspace:` ranges to real versions)
-      # and publish the tarball with npm (for --provenance).
+      # Pack each package and check what it would ship (tarball contents,
+      # publint, Are the Types Wrong?) before anything is published.
+      - name: Check packages
+        run: bun run check:package
+
+      # Publish in dependency order: @usesounds/react has a peer dependency on
+      # @usesounds/core, so core must be on npm first. Any failure stops the
+      # step, so react is never published after a failed core publish.
+      # For each package: skip it if its version is already on npm, otherwise
+      # pack it with Bun (rewrites `workspace:`/`catalog:` ranges to real
+      # versions) and publish the tarball with npm (for --provenance).
       - name: Publish packages
         run: |
+          PUBLISH_ORDER="packages/core packages/react"
           for dir in packages/*/; do
-            PKG_NAME=$(node -p "require('./${dir}package.json').name")
-            PKG_VERSION=$(node -p "require('./${dir}package.json').version")
-            PKG_PRIVATE=$(node -p "Boolean(require('./${dir}package.json').private)")
+            case " $PUBLISH_ORDER " in
+              *" ${dir%/} "*) ;;
+              *) echo "::error::${dir%/} is missing from PUBLISH_ORDER"; exit 1 ;;
+            esac
+          done
+          for dir in $PUBLISH_ORDER; do
+            PKG_NAME=$(node -p "require('./${dir}/package.json').name")
+            PKG_VERSION=$(node -p "require('./${dir}/package.json').version")
+            PKG_PRIVATE=$(node -p "Boolean(require('./${dir}/package.json').private)")
             if [ "$PKG_PRIVATE" = "true" ]; then
               echo "Skipping $PKG_NAME (private)"
               continue
