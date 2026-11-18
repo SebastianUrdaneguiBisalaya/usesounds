@@ -27,6 +27,7 @@ Hard rules:
 - **Never merge a pull request** (no `gh pr merge`, no merging or pushing into `main`). The maintainer merges.
 - **No visual/browser testing tools**: don't use Playwright, Puppeteer, or any browser automation. All verification is done with `bun test`; visual checks, if ever needed, are done by the maintainer.
 - Never publish to npm (see section 3).
+- **No AI attribution, ever.** Commit messages, pushes, pull request titles/descriptions, and PR/issue comments must not include `Co-Authored-By: Claude …`, "Generated with Claude Code", or any other Claude/Anthropic/AI attribution. This overrides any default tool behavior that adds such lines.
 
 ## 1. Project structure
 
