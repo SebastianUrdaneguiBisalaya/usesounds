@@ -31,7 +31,7 @@ export default defineConfig({
     };
   },
 
-  platform: "node",
+  platform: "browser",
 
   skipNodeModulesBundle: true,
 
