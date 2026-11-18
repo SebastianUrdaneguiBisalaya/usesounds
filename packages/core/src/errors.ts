@@ -78,7 +78,7 @@ function describeCause(cause: unknown): string {
  * @example
  * ```ts
  * try {
- *   engine.register("", { url: "/chime.mp3" });
+ *   engine.register("", { type: "sample", src: "/chime.mp3" });
  * } catch (error) {
  *   if (error instanceof UsesoundsError) {
  *     console.warn(error.code, error.message);
@@ -111,7 +111,7 @@ export class UsesoundsError extends Error {
  * @example
  * ```ts
  * try {
- *   engine.register("", { url: "/chime.mp3" });
+ *   engine.register("", { type: "sample", src: "/chime.mp3" });
  * } catch (error) {
  *   if (error instanceof InvalidSoundError) {
  *     error.sound; // ""
