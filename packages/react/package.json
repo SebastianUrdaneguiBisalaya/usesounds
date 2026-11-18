@@ -19,7 +19,15 @@
     "name": "Sebastian Marat Urdanegui Bisalaya",
     "url": "https://sebastianurdanegui.com"
   },
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SebastianUrdaneguiBisalaya/usesounds.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/SebastianUrdaneguiBisalaya/usesounds/tree/main/packages/react#readme",
+  "bugs": {
+    "url": "https://github.com/SebastianUrdaneguiBisalaya/usesounds/issues"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -38,7 +46,9 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "sideEffects": false,
   "scripts": {
@@ -50,7 +60,8 @@
     "prepublishOnly": "bun run typecheck && bun run test && bun run build"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "devEngines": {
     "packageManager": {
@@ -60,7 +71,7 @@
     }
   },
   "peerDependencies": {
-    "@usesounds/core": "workspace:*",
+    "@usesounds/core": "workspace:^",
     "react": ">=18"
   },
   "devDependencies": {
@@ -70,7 +81,7 @@
     "@types/bun": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@usesounds/core": "workspace:*",
+    "@usesounds/core": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:",
     "tsup": "catalog:",

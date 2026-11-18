@@ -27,6 +27,7 @@
   },
   "scripts": {
     "build": "bun run --filter './packages/*' build",
+    "check:package": "bun scripts/check-package.ts",
     "dev": "bun run --filter './packages/*' dev",
     "typecheck": "bun run --filter './packages/*' typecheck",
     "lint": "biome check .",
@@ -34,7 +35,9 @@
     "format": "biome format --write .",
     "test": "bun run --filter './packages/*' test",
     "test:watch": "bun test --watch",
-    "prepare": "husky"
+    "prepare": "husky",
+    "changeset": "changeset",
+    "version-packages": "changeset version && bun install"
   },
   "devEngines": {
     "packageManager": {
@@ -50,7 +53,10 @@
     "esbuild"
   ],
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
     "@biomejs/biome": "2.5.11",
-    "husky": "9.1.7"
+    "@changesets/cli": "3.0.3",
+    "husky": "9.1.7",
+    "publint": "0.3.25"
   }
 }
