@@ -17,9 +17,9 @@ globalThis.fetch = Object.assign(
 ) as typeof fetch;
 
 const environment = {
-  AudioContext: typeof Reflect.get(globalThis, "AudioContext"),
+  AudioContext: typeof AudioContext,
   document: typeof document,
-  matchMedia: typeof Reflect.get(globalThis, "matchMedia"),
+  matchMedia: typeof matchMedia,
   window: typeof window,
 };
 
