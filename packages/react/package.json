@@ -1,0 +1,79 @@
+{
+  "name": "@usesounds/react",
+  "version": "0.1.0",
+  "description": "React bindings for usesounds: <SoundProvider>, useSound() and declarative data-sound UI sounds, built on @usesounds/core.",
+  "keywords": [
+    "sound",
+    "ui-sounds",
+    "web-audio",
+    "audio",
+    "synth",
+    "feedback",
+    "click",
+    "usesounds",
+    "react",
+    "hooks"
+  ],
+  "license": "ISC",
+  "author": {
+    "name": "Sebastian Marat Urdanegui Bisalaya",
+    "url": "https://sebastianurdanegui.com"
+  },
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test --pass-with-no-tests",
+    "test:watch": "bun test --watch",
+    "prepublishOnly": "bun run typecheck && bun run test && bun run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "bun",
+      "version": "1.4.2",
+      "onFail": "warn"
+    }
+  },
+  "peerDependencies": {
+    "@usesounds/core": "workspace:*",
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/bun": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@usesounds/core": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,3 @@
+[test]
+# Bun has no DOM: register happy-dom globals (window, document…) before tests run.
+preload = ["./tests/preload.ts"]

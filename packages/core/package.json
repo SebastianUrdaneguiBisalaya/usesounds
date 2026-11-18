@@ -58,6 +58,7 @@
     }
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "catalog:",
     "@types/bun": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:"
