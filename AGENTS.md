@@ -7,7 +7,26 @@ Standards and project context for **usesounds**: a zero-dependency library of UI
 
 This repo **only** ships npm packages. There is no `apps/` folder, no documentation website, and no demo app inside the repo. Don't add one.
 
-Sections 1-8 are the engineering rules. Section 9 is the product context (what the library does and how its API looks).
+Section 0 is the working agreement for agents. Sections 1-8 are the engineering rules. Section 9 is the product context (what the library does and how its API looks).
+
+## 0. Working agreement (issues → branch → pull request)
+
+Work is organized as GitHub issues in this repo, numbered and meant to be done in order (see `gh issue list`).
+
+When told **"start with issue #N"**:
+
+1. Read the issue (`gh issue view N`) and this file. Don't start a different issue, and don't expand scope beyond the issue; if something else is needed, mention it in the PR description instead.
+2. Create a new branch from an up-to-date `main`, named after the issue: `<type>/<N>-<short-summary>` (e.g. `feat/5-sound-engine`).
+3. Implement the issue, with `bun test` tests for the behavior it adds. Run `bun run lint`, `bun run typecheck`, `bun run test`, and `bun run build` — all must pass.
+4. Commit on that branch using [Conventional Commits](https://www.conventionalcommits.org/) (scope = package when it applies: `feat(core): …`, `feat(react): …`).
+5. Push the branch and open a pull request to `main` with `gh pr create`, referencing the issue (`Closes #N`) and summarizing what changed and how it was tested.
+6. Stop there and report the PR link.
+
+Hard rules:
+
+- **Never merge a pull request** (no `gh pr merge`, no merging or pushing into `main`). The maintainer merges.
+- **No visual/browser testing tools**: don't use Playwright, Puppeteer, or any browser automation. All verification is done with `bun test`; visual checks, if ever needed, are done by the maintainer.
+- Never publish to npm (see section 3).
 
 ## 1. Project structure
 
@@ -103,7 +122,6 @@ Both packages must work with `import` and `require`, and ship their own `.d.ts`.
 - **Lint/format: Biome** (`biome.json`). `.editorconfig` covers files Biome doesn't format.
 - **Git hooks (husky)**, installed by `prepare: "husky"` on `bun install`:
   - `pre-commit`: `bun run lint` + `bun run typecheck`.
-  - `commit-msg`: [Conventional Commits](https://www.conventionalcommits.org/) (use the package as scope: `feat(react): …`, `fix(core): …`).
   - `pre-push`: `bun run test` + `bun run build`.
   - Hooks are a local safety net; CI runs the same checks independently.
 
