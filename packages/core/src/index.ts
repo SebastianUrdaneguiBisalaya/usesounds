@@ -17,6 +17,7 @@ export {
 } from "./errors.js";
 export type { PresetName, SoundName } from "./presets.js";
 export { presetNames, presets } from "./presets.js";
+export type { SampleSound } from "./sample.js";
 export type {
   SynthNoiseVoice,
   SynthSound,
@@ -24,3 +25,4 @@ export type {
   SynthVoice,
   SynthWaveform,
 } from "./synth.js";
+export type { SoundDefinition } from "./validate.js";

@@ -24,12 +24,18 @@ export type UsesoundsErrorOptions = {
  * - `"unknown-sound"` — no preset or registered sound has that name.
  * - `"audio-unavailable"` — the `AudioContext` couldn't be created or resumed
  *   (Web Audio unsupported, blocked, or closed).
+ * - `"sample-load-failed"` — a sample's bytes couldn't be fetched (network
+ *   error, HTTP error status, CSP `connect-src` block, CORS).
+ * - `"sample-decode-failed"` — a sample was fetched but the browser couldn't
+ *   decode it (unsupported or corrupt file).
  * - `"playback-failed"` — anything else that went wrong while playing
  *   (e.g. an invalid `pitch`, or the context rejected a value).
  */
 export type SoundPlaybackReason =
   | "unknown-sound"
   | "audio-unavailable"
+  | "sample-load-failed"
+  | "sample-decode-failed"
   | "playback-failed";
 
 /** Options accepted by the {@link SoundPlaybackError} constructor. */
@@ -41,6 +47,8 @@ export type SoundPlaybackErrorOptions = UsesoundsErrorOptions & {
 const REASON_DESCRIPTIONS: { readonly [R in SoundPlaybackReason]: string } = {
   "audio-unavailable": "audio is unavailable",
   "playback-failed": "playback failed",
+  "sample-decode-failed": "the sample could not be decoded",
+  "sample-load-failed": "the sample could not be loaded",
   "unknown-sound": "no sound is registered with this name",
 };
 
