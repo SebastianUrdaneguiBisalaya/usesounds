@@ -9,11 +9,26 @@ export type DeclarativeTarget = {
   unlock(): Promise<void>;
 };
 
+/** Options for a declarative binding. */
+export type DeclarativeBindingOptions = {
+  /**
+   * When several engines bind the same root, the binding with the highest
+   * priority plays; ties go to the most recently bound. Default `0`.
+   */
+  priority?: number;
+};
+
+/** One binding; each has its own identity, even for the same target. */
+type Binding = {
+  target: DeclarativeTarget;
+  priority: number;
+};
+
 type RootState = {
-  /** Engines bound with `bindDeclarative`, most recent last (only it plays). */
-  players: DeclarativeTarget[][];
+  /** Bindings made with `bindDeclarative`, in binding order. */
+  players: Binding[];
   /** Every binding (declarative or unlock-only); all of them get unlocked. */
-  unlockers: DeclarativeTarget[][];
+  unlockers: Binding[];
   onPointerDown: (event: Event) => void;
   onKeyDown: (event: Event) => void;
 };
@@ -99,7 +114,7 @@ function playFrom(state: RootState, element: Element, origin: Element): void {
   if (isDisabled(origin)) {
     return;
   }
-  const player = state.players.at(-1)?.[0];
+  const player = selectPlayer(state.players);
   if (player === undefined) {
     return;
   }
@@ -115,10 +130,21 @@ function playFrom(state: RootState, element: Element, origin: Element): void {
   player.play(name, options);
 }
 
+/** Highest priority wins; among equals, the most recently bound. */
+function selectPlayer(players: Binding[]): DeclarativeTarget | undefined {
+  let best: Binding | undefined;
+  for (const binding of players) {
+    if (best === undefined || binding.priority >= best.priority) {
+      best = binding;
+    }
+  }
+  return best?.target;
+}
+
 function unlockAll(state: RootState): void {
   const seen = new Set<DeclarativeTarget>();
-  for (const [target] of state.unlockers) {
-    if (target !== undefined && !seen.has(target)) {
+  for (const { target } of state.unlockers) {
+    if (!seen.has(target)) {
       seen.add(target);
       void target.unlock();
     }
@@ -172,6 +198,7 @@ function bind(
   root: DeclarativeRoot,
   target: DeclarativeTarget,
   declarative: boolean,
+  priority = 0,
 ): () => void {
   let state = roots.get(root);
   if (state === undefined) {
@@ -180,11 +207,12 @@ function bind(
     root.addEventListener("pointerdown", state.onPointerDown, LISTENER_OPTIONS);
     root.addEventListener("keydown", state.onKeyDown, LISTENER_OPTIONS);
   }
-  // A one-element tuple gives each binding its own identity, so binding the
-  // same engine twice and unbinding once leaves the other binding in place.
-  const entry: DeclarativeTarget[] = [
+  // A fresh object per binding, so binding the same engine twice and
+  // unbinding once leaves the other binding in place.
+  const entry: Binding = {
+    priority: Number.isFinite(priority) ? priority : 0,
     target,
-  ];
+  };
   state.unlockers.push(entry);
   if (declarative) {
     state.players.push(entry);
@@ -216,14 +244,15 @@ function bind(
 
 /**
  * Plays the `data-sound` of activated elements under `root` with `target`.
- * One listener set per root, shared by every binding; the most recent
- * declarative binding of a root is the one that plays.
+ * One listener set per root, shared by every binding; the declarative binding
+ * with the highest priority (then the most recent) is the one that plays.
  */
 export function bindDeclarativeListener(
   root: DeclarativeRoot,
   target: DeclarativeTarget,
+  options: DeclarativeBindingOptions = {},
 ): () => void {
-  return bind(root, target, true);
+  return bind(root, target, true, options.priority);
 }
 
 /** Calls `target.unlock()` on every pointer/keyboard gesture under `root`. */
