@@ -4,3 +4,10 @@ export {
   SoundPlaybackError,
   UsesoundsError,
 } from "./errors.js";
+export type {
+  SynthNoiseVoice,
+  SynthSound,
+  SynthToneVoice,
+  SynthVoice,
+  SynthWaveform,
+} from "./synth.js";
