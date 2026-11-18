@@ -32,6 +32,13 @@
     "noUncheckedSideEffectImports": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    // Typecheck and tests use @usesounds/core's source, so they don't need a
+    // prior build. tsconfig.build.json drops this so the build stays external.
+    "paths": {
+      "@usesounds/core": [
+        "../core/src/index.ts"
+      ]
+    },
     "skipLibCheck": true,
 
     // Other Outputs

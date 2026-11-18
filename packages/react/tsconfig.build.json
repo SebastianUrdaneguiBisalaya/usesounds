@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "paths": {}
+  },
+  // Used by tsup: resolve @usesounds/core as an external package (its built
+  // types), never from source, so it isn't inlined into this package.
+  "extends": "./tsconfig.json",
+  "include": [
+    "src"
+  ]
+}

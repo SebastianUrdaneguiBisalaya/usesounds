@@ -1,6 +1,7 @@
 import {
   bindDeclarativeListener,
   bindUnlockListener,
+  type DeclarativeBindingOptions,
   type DeclarativeRoot,
 } from "./declarative.js";
 import { isBrowser, prefersReducedMotion } from "./environment.js";
@@ -142,9 +143,11 @@ export type SoundEngine = {
    *
    * Listeners are delegated and installed once per root (capture phase), no
    * matter how many engines bind it. When several engines bind the same root
-   * (nested providers), the most recently bound one plays. No-op on the server.
+   * (nested providers), the binding with the highest `priority` plays, and
+   * among equal priorities the most recently bound one. No-op on the server.
    *
    * @param root - Where to listen. Default: `document`.
+   * @param options - `priority` (default `0`): see above.
    * @returns A function that removes this binding (idempotent).
    *
    * @example
@@ -155,7 +158,10 @@ export type SoundEngine = {
    * unbind();
    * ```
    */
-  bindDeclarative(root?: DeclarativeRoot): () => void;
+  bindDeclarative(
+    root?: DeclarativeRoot,
+    options?: DeclarativeBindingOptions,
+  ): () => void;
   /**
    * Calls `unlock()` on the first and every later pointer/keyboard gesture
    * under `root`, for apps that only use `play()` imperatively. Shares the
@@ -536,11 +542,11 @@ export function createSoundEngine(
   };
 
   return {
-    bindDeclarative(root) {
+    bindDeclarative(root, bindingOptions) {
       const resolved = resolveRoot(root);
       return resolved === null
         ? noop
-        : bindDeclarativeListener(resolved, target);
+        : bindDeclarativeListener(resolved, target, bindingOptions);
     },
     bindUnlock(root) {
       const resolved = resolveRoot(root);

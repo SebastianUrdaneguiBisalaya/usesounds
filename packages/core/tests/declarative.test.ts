@@ -410,6 +410,52 @@ describe("nested engines", () => {
     ]);
   });
 
+  it("a higher priority wins regardless of binding order", () => {
+    const outer = recorder();
+    const inner = recorder();
+    // React runs child effects first: the inner provider binds before the outer one.
+    const unbindInner = track(
+      bindDeclarativeListener(root, inner, {
+        priority: 1,
+      }),
+    );
+    track(
+      bindDeclarativeListener(root, outer, {
+        priority: 0,
+      }),
+    );
+    mount('<button data-sound="tick">x</button>');
+
+    pointerDown(el("button"));
+    expect(inner.plays).toHaveLength(1);
+    expect(outer.plays).toHaveLength(0);
+
+    unbindInner();
+    pointerDown(el("button"));
+    expect(outer.plays).toHaveLength(1);
+  });
+
+  it("ties on priority go to the most recent binding", () => {
+    const first = recorder();
+    const second = recorder();
+    track(
+      bindDeclarativeListener(root, first, {
+        priority: 2,
+      }),
+    );
+    track(
+      bindDeclarativeListener(root, second, {
+        priority: 2,
+      }),
+    );
+    mount('<button data-sound="tick">x</button>');
+
+    pointerDown(el("button"));
+
+    expect(second.plays).toHaveLength(1);
+    expect(first.plays).toHaveLength(0);
+  });
+
   it("an unlock-only binding never takes over playback", () => {
     const player = recorder();
     const unlocker = recorder();
