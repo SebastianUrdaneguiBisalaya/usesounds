@@ -64,8 +64,24 @@ export type FakeAudioBuffer = {
   getChannelData(channel: number): Float32Array;
 };
 
+export type FakeAudioContextState = "suspended" | "running" | "closed";
+
 export type FakeAudioContext = {
   currentTime: number;
+  state: FakeAudioContextState;
+  /** Number of `resume()` / `close()` calls. */
+  resumeCalls: number;
+  closeCalls: number;
+  /**
+   * Behavior of `resume()`: `"resolve"` (default) switches to `"running"` and
+   * resolves; `"reject"` rejects; `"pending"` never settles until
+   * `settleResume()` is called.
+   */
+  resumeBehavior: "resolve" | "reject" | "pending";
+  /** Settles pending `resume()` calls as if the browser allowed audio now. */
+  settleResume(): void;
+  resume(): Promise<void>;
+  close(): Promise<void>;
   sampleRate: number;
   destination: FakeAudioNode;
   nodes: FakeAudioNode[];
@@ -128,9 +144,14 @@ function createParam(value: number): FakeAudioParam {
 
 /** Creates a fake `AudioContext`. Use `asReal()` to pass it to `src/`. */
 export function createFakeAudioContext(
-  options: { currentTime?: number; sampleRate?: number } = {},
+  options: {
+    currentTime?: number;
+    sampleRate?: number;
+    state?: FakeAudioContextState;
+  } = {},
 ): FakeAudioContext {
   const connections: FakeAudioContext["connections"] = new Set();
+  const pendingResumes: (() => void)[] = [];
 
   function createNode(kind: FakeNodeKind): FakeAudioNode {
     const node: FakeAudioNode = {
@@ -184,6 +205,12 @@ export function createFakeAudioContext(
       return ctx as unknown as AudioContext;
     },
     buffers: [],
+    close() {
+      ctx.closeCalls++;
+      ctx.state = "closed";
+      return Promise.resolve();
+    },
+    closeCalls: 0,
     connections,
     createBiquadFilter() {
       const node = createNode("biquadFilter");
@@ -244,7 +271,34 @@ export function createFakeAudioContext(
     nodesOf(kind) {
       return ctx.nodes.filter((node) => node.kind === kind);
     },
+    resume() {
+      ctx.resumeCalls++;
+      if (ctx.resumeBehavior === "reject") {
+        return Promise.reject(new Error("resume blocked"));
+      }
+      return new Promise<void>((resolve) => {
+        const settle = () => {
+          if (ctx.state !== "closed") {
+            ctx.state = "running";
+          }
+          resolve();
+        };
+        if (ctx.resumeBehavior === "pending") {
+          pendingResumes.push(settle);
+        } else {
+          settle();
+        }
+      });
+    },
+    resumeBehavior: "resolve",
+    resumeCalls: 0,
     sampleRate: options.sampleRate ?? 48000,
+    settleResume() {
+      for (const settle of pendingResumes.splice(0)) {
+        settle();
+      }
+    },
+    state: options.state ?? "running",
   };
   ctx.destination = createNode("destination");
   return ctx;

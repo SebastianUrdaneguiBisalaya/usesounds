@@ -80,14 +80,49 @@ describe("SoundPlaybackError", () => {
     expect(error).not.toBeInstanceOf(InvalidSoundError);
   });
 
-  it("exposes name, code, sound and a message without cause", () => {
+  it("exposes name, code, sound, default reason and its message", () => {
     const error = new SoundPlaybackError("tick");
 
     expect(error.name).toBe("SoundPlaybackError");
     expect(error.code).toBe("SOUND_PLAYBACK_FAILED");
     expect(error.sound).toBe("tick");
-    expect(error.message).toBe('Failed to play sound "tick"');
+    expect(error.reason).toBe("playback-failed");
+    expect(error.message).toBe('Failed to play sound "tick": playback failed');
     expect(error.cause).toBeUndefined();
+  });
+
+  it.each([
+    [
+      "unknown-sound",
+      'Failed to play sound "x": no sound is registered with this name',
+    ],
+    [
+      "audio-unavailable",
+      'Failed to play sound "x": audio is unavailable',
+    ],
+    [
+      "playback-failed",
+      'Failed to play sound "x": playback failed',
+    ],
+  ] as const)("describes the %s reason", (reason, message) => {
+    const error = new SoundPlaybackError("x", {
+      reason,
+    });
+
+    expect(error.reason).toBe(reason);
+    expect(error.message).toBe(message);
+  });
+
+  it("prefers the cause's message over the reason description", () => {
+    const error = new SoundPlaybackError("x", {
+      cause: new Error("AudioContext is not defined"),
+      reason: "audio-unavailable",
+    });
+
+    expect(error.reason).toBe("audio-unavailable");
+    expect(error.message).toBe(
+      'Failed to play sound "x": AudioContext is not defined',
+    );
   });
 
   it("keeps an Error cause and appends its message", () => {
@@ -111,7 +146,7 @@ describe("SoundPlaybackError", () => {
     expect(error.message).toBe('Failed to play sound "pop": context blocked');
   });
 
-  it("keeps a non-Error cause without changing the message", () => {
+  it("keeps a non-Error cause and falls back to the reason description", () => {
     const cause = {
       status: 404,
     };
@@ -120,7 +155,7 @@ describe("SoundPlaybackError", () => {
     });
 
     expect(error.cause).toBe(cause);
-    expect(error.message).toBe('Failed to play sound "pop"');
+    expect(error.message).toBe('Failed to play sound "pop": playback failed');
   });
 });
 
