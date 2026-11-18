@@ -18,6 +18,32 @@ export type UsesoundsErrorOptions = {
   cause?: unknown;
 };
 
+/**
+ * Why a sound failed to play, carried by {@link SoundPlaybackError.reason}.
+ *
+ * - `"unknown-sound"` — no preset or registered sound has that name.
+ * - `"audio-unavailable"` — the `AudioContext` couldn't be created or resumed
+ *   (Web Audio unsupported, blocked, or closed).
+ * - `"playback-failed"` — anything else that went wrong while playing
+ *   (e.g. an invalid `pitch`, or the context rejected a value).
+ */
+export type SoundPlaybackReason =
+  | "unknown-sound"
+  | "audio-unavailable"
+  | "playback-failed";
+
+/** Options accepted by the {@link SoundPlaybackError} constructor. */
+export type SoundPlaybackErrorOptions = UsesoundsErrorOptions & {
+  /** Why the sound failed. Default `"playback-failed"`. */
+  reason?: SoundPlaybackReason;
+};
+
+const REASON_DESCRIPTIONS: { readonly [R in SoundPlaybackReason]: string } = {
+  "audio-unavailable": "audio is unavailable",
+  "playback-failed": "playback failed",
+  "unknown-sound": "no sound is registered with this name",
+};
+
 function toErrorOptions(
   options: UsesoundsErrorOptions | undefined,
 ): ErrorOptions | undefined {
@@ -130,18 +156,25 @@ export class SoundPlaybackError extends UsesoundsError {
   /** Name of the sound that failed to play. */
   readonly sound: string;
 
+  /** Why the sound failed to play. See {@link SoundPlaybackReason}. */
+  readonly reason: SoundPlaybackReason;
+
   /**
    * @param sound - Name of the sound that failed.
-   * @param options - `cause`: the underlying failure; its message is appended
-   *   to this error's message.
+   * @param options - `reason` (default `"playback-failed"`) and `cause`: the
+   *   underlying failure; its message (or the reason's description) is
+   *   appended to this error's message.
    */
-  constructor(sound: string, options?: UsesoundsErrorOptions) {
-    const detail = describeCause(options?.cause);
+  constructor(sound: string, options?: SoundPlaybackErrorOptions) {
+    const reason = options?.reason ?? "playback-failed";
+    const cause = describeCause(options?.cause);
+    const detail = cause === "" ? REASON_DESCRIPTIONS[reason] : cause;
     super(
       "SOUND_PLAYBACK_FAILED",
-      `Failed to play sound "${sound}"${detail === "" ? "" : `: ${detail}`}`,
+      `Failed to play sound "${sound}": ${detail}`,
       options,
     );
     this.sound = sound;
+    this.reason = reason;
   }
 }

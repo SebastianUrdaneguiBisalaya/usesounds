@@ -1,4 +1,15 @@
-export type { UsesoundsErrorCode, UsesoundsErrorOptions } from "./errors.js";
+export type {
+  SoundEngine,
+  SoundEngineOptions,
+  SoundPlayOptions,
+} from "./engine.js";
+export { createSoundEngine } from "./engine.js";
+export type {
+  SoundPlaybackErrorOptions,
+  SoundPlaybackReason,
+  UsesoundsErrorCode,
+  UsesoundsErrorOptions,
+} from "./errors.js";
 export {
   InvalidSoundError,
   SoundPlaybackError,
