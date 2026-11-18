@@ -104,6 +104,14 @@ describe("SoundPlaybackError", () => {
       "playback-failed",
       'Failed to play sound "x": playback failed',
     ],
+    [
+      "sample-load-failed",
+      'Failed to play sound "x": the sample could not be loaded',
+    ],
+    [
+      "sample-decode-failed",
+      'Failed to play sound "x": the sample could not be decoded',
+    ],
   ] as const)("describes the %s reason", (reason, message) => {
     const error = new SoundPlaybackError("x", {
       reason,

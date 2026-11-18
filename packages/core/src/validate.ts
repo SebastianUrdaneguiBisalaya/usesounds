@@ -1,5 +1,9 @@
 import { InvalidSoundError } from "./errors.js";
+import type { SampleSound } from "./sample.js";
 import type { SynthSound, SynthWaveform } from "./synth.js";
+
+/** Any sound the engine can play: synthesized, or a consumer-provided sample. */
+export type SoundDefinition = SynthSound | SampleSound;
 
 const WAVEFORMS: readonly SynthWaveform[] = [
   "sine",
@@ -124,5 +128,50 @@ export function assertValidSynthSound(
     if (reason !== undefined) {
       throw new InvalidSoundError(name, reason);
     }
+  }
+}
+
+/** Returns `true` when `sound` is a {@link SampleSound} (has `type: "sample"`). */
+export function isSampleSound(sound: SoundDefinition): sound is SampleSound {
+  return "type" in sound && sound.type === "sample";
+}
+
+/**
+ * Throws {@link InvalidSoundError} unless `sound` is a well-formed
+ * {@link SoundDefinition}: a {@link SampleSound} when it has a `type`, a
+ * {@link SynthSound} otherwise.
+ */
+export function assertValidSound(
+  name: string,
+  sound: unknown,
+): asserts sound is SoundDefinition {
+  const type = isObject(sound)
+    ? (
+        sound as {
+          type?: unknown;
+        }
+      ).type
+    : undefined;
+  if (type === undefined) {
+    assertValidSynthSound(name, sound);
+    return;
+  }
+  if (type !== "sample") {
+    throw new InvalidSoundError(
+      name,
+      '`type` must be "sample" (or omitted for synthesized sounds)',
+    );
+  }
+  const src = (
+    sound as {
+      src?: unknown;
+    }
+  ).src;
+  const isUrl = typeof src === "string" && src.trim() !== "";
+  if (!isUrl && !(src instanceof ArrayBuffer)) {
+    throw new InvalidSoundError(
+      name,
+      "sample `src` must be a non-empty URL string or an ArrayBuffer",
+    );
   }
 }

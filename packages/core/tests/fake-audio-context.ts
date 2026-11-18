@@ -40,6 +40,7 @@ export type FakeAudioNode = {
   frequency?: FakeAudioParam;
   Q?: FakeAudioParam;
   gain?: FakeAudioParam;
+  playbackRate?: FakeAudioParam;
   buffer?: FakeAudioBuffer | null;
   loop?: boolean;
   startedAt?: number;
@@ -78,6 +79,16 @@ export type FakeAudioContext = {
    * `settleResume()` is called.
    */
   resumeBehavior: "resolve" | "reject" | "pending";
+  /** Every `ArrayBuffer` passed to `decodeAudioData`, in call order. */
+  decoded: ArrayBuffer[];
+  /**
+   * Decodes bytes into a buffer. Default: resolves (after a microtask) with a
+   * mono buffer whose length is the byte length. Replace it to simulate
+   * failures or slow decoding.
+   */
+  decodeImpl(data: ArrayBuffer): Promise<FakeAudioBuffer>;
+  /** Like the real API, detaches `data` before decoding it. */
+  decodeAudioData(data: ArrayBuffer): Promise<FakeAudioBuffer>;
   /** Settles pending `resume()` calls as if the browser allowed audio now. */
   settleResume(): void;
   resume(): Promise<void>;
@@ -245,6 +256,7 @@ export function createFakeAudioContext(
       const node = createSourceNode("bufferSource");
       node.buffer = null;
       node.loop = false;
+      node.playbackRate = createParam(1);
       return node;
     },
     createGain() {
@@ -259,6 +271,21 @@ export function createFakeAudioContext(
       return node;
     },
     currentTime: options.currentTime ?? 0,
+    decodeAudioData(data) {
+      if (data.detached) {
+        return Promise.reject(new TypeError("ArrayBuffer is detached"));
+      }
+      // The real decodeAudioData detaches (transfers) the buffer it receives.
+      const owned = data.transfer();
+      ctx.decoded.push(owned);
+      return ctx.decodeImpl(owned);
+    },
+    decoded: [],
+    decodeImpl(data) {
+      return Promise.resolve(
+        ctx.createBuffer(1, data.byteLength || 1, ctx.sampleRate),
+      );
+    },
     destination: undefined as unknown as FakeAudioNode,
     endAll() {
       for (const node of ctx.nodes) {
