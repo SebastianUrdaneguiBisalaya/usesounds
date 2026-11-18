@@ -16,11 +16,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: 11.1.1
+          bun-version: 1.4.2
 
+      # npm is still used for the final `npm publish --provenance` step.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -28,34 +29,43 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Typecheck
-        run: pnpm run typecheck
+        run: bun run typecheck
 
       - name: Lint
-        run: pnpm run lint
+        run: bun run lint
 
       - name: Test
-        run: pnpm run test
+        run: bun run test
 
       - name: Build
-        run: pnpm run build
+        run: bun run build
 
-      - name: Check if this version is already published
-        id: version-check
+      # For every publishable package: skip it if its version is already on npm,
+      # otherwise pack it with Bun (rewrites `workspace:` ranges to real versions)
+      # and publish the tarball with npm (for --provenance).
+      - name: Publish packages
         run: |
-          PKG_NAME=$(node -p "require('./packages/core/package.json').name")
-          PKG_VERSION=$(node -p "require('./packages/core/package.json').version")
-          if npm view "$PKG_NAME@$PKG_VERSION" version >/dev/null 2>&1; then
-            echo "published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "published=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Publish to npm
-        if: steps.version-check.outputs.published == 'false'
-        working-directory: packages/core
-        run: pnpm publish --access public --no-git-checks --provenance
+          for dir in packages/*/; do
+            PKG_NAME=$(node -p "require('./${dir}package.json').name")
+            PKG_VERSION=$(node -p "require('./${dir}package.json').version")
+            PKG_PRIVATE=$(node -p "Boolean(require('./${dir}package.json').private)")
+            if [ "$PKG_PRIVATE" = "true" ]; then
+              echo "Skipping $PKG_NAME (private)"
+              continue
+            fi
+            if npm view "$PKG_NAME@$PKG_VERSION" version >/dev/null 2>&1; then
+              echo "Skipping $PKG_NAME@$PKG_VERSION (already published)"
+              continue
+            fi
+            (
+              cd "$dir"
+              rm -f ./*.tgz
+              bun pm pack
+              npm publish ./*.tgz --access public --provenance
+            )
+          done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

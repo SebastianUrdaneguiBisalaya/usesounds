@@ -39,7 +39,9 @@
     // Recommended Options
     "strict": true,
     "target": "esnext",
-    "types": [],
+    "types": [
+      "bun"
+    ],
     "verbatimModuleSyntax": true
   },
   "exclude": [

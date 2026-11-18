@@ -1,0 +1,3 @@
+[install]
+# Pin every added dependency to an exact version (no ^ ranges). See AGENTS.md.
+exact = true

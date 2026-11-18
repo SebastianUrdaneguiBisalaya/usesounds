@@ -1,17 +1,22 @@
 {
-  "name": "node-sdk-template",
+  "name": "@usesounds/core",
   "version": "0.1.0",
-  "description": "Template for a Node.js SDK in TypeScript wrapping a third-party HTTP API, with dual ESM/CJS support.",
+  "description": "Zero-dependency Web Audio engine for synthesized UI sounds (tick, pop, tap, toggle) with declarative data-sound support. Framework-agnostic core of usesounds.",
   "keywords": [
-    "sdk",
-    "typescript",
-    "template",
-    "tsup",
-    "esm",
-    "cjs"
+    "sound",
+    "ui-sounds",
+    "web-audio",
+    "audio",
+    "synth",
+    "feedback",
+    "click",
+    "usesounds"
   ],
   "license": "ISC",
-  "author": "",
+  "author": {
+    "name": "Sebastian Marat Urdanegui Bisalaya",
+    "url": "https://sebastianurdanegui.com"
+  },
   "private": true,
   "type": "module",
   "main": "./dist/index.cjs",
@@ -19,9 +24,14 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -33,26 +43,23 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest",
-    "prepublishOnly": "pnpm run typecheck && pnpm run test && pnpm run build"
+    "test": "bun test --pass-with-no-tests",
+    "test:watch": "bun test --watch",
+    "prepublishOnly": "bun run typecheck && bun run test && bun run build"
   },
   "publishConfig": {
     "access": "public"
   },
   "devEngines": {
     "packageManager": {
-      "name": "pnpm",
-      "version": "12.3.4"
+      "name": "bun",
+      "version": "1.4.2",
+      "onFail": "warn"
     }
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "devDependencies": {
-    "tsup": "8.5.1",
-    "tsx": "4.23.13",
-    "typescript": "5.7.3",
-    "vitest": "4.1.11"
+    "@types/bun": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
   }
 }
