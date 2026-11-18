@@ -1,3 +1,8 @@
+import {
+  bindDeclarativeListener,
+  bindUnlockListener,
+  type DeclarativeRoot,
+} from "./declarative.js";
 import { isBrowser, prefersReducedMotion } from "./environment.js";
 import {
   SoundPlaybackError,
@@ -121,7 +126,59 @@ export type SoundEngine = {
    * Decoded samples stay cached.
    */
   dispose(): void;
+  /**
+   * Enables the declarative API: activating an element with a `data-sound`
+   * attribute under `root` plays that sound with this engine.
+   *
+   * - Pointer: `pointerdown` with the primary button, on the closest
+   *   `[data-sound]` ancestor of the target.
+   * - Keyboard: `Enter` on a focused `[data-sound]` element, and `Space` on
+   *   buttons, `role="button" | "switch" | "checkbox" | "radio"` and
+   *   checkbox/radio/button inputs. Key repeats are ignored.
+   * - Disabled elements (`:disabled`, inside `fieldset[disabled]`, or
+   *   `aria-disabled="true"`) don't play.
+   * - Per-element overrides: `data-sound-volume`, `data-sound-pitch`.
+   * - Every gesture also calls `unlock()`.
+   *
+   * Listeners are delegated and installed once per root (capture phase), no
+   * matter how many engines bind it. When several engines bind the same root
+   * (nested providers), the most recently bound one plays. No-op on the server.
+   *
+   * @param root - Where to listen. Default: `document`.
+   * @returns A function that removes this binding (idempotent).
+   *
+   * @example
+   * ```ts
+   * const unbind = engine.bindDeclarative();
+   * // <button data-sound="tick">Save</button>
+   * // <button data-sound="pop" data-sound-volume="0.5">Delete</button>
+   * unbind();
+   * ```
+   */
+  bindDeclarative(root?: DeclarativeRoot): () => void;
+  /**
+   * Calls `unlock()` on the first and every later pointer/keyboard gesture
+   * under `root`, for apps that only use `play()` imperatively. Shares the
+   * same delegated listeners as `bindDeclarative`. No-op on the server.
+   *
+   * @param root - Where to listen. Default: `document`.
+   * @returns A function that removes this binding (idempotent).
+   */
+  bindUnlock(root?: DeclarativeRoot): () => void;
 };
+
+function noop(): void {
+  // Nothing to unbind.
+}
+
+function resolveRoot(
+  root: DeclarativeRoot | undefined,
+): DeclarativeRoot | null {
+  if (root !== undefined) {
+    return root;
+  }
+  return isBrowser() ? document : null;
+}
 
 type AudioState = {
   ctx: AudioContext;
@@ -473,7 +530,22 @@ export function createSoundEngine(
     }
   }
 
+  const target = {
+    play,
+    unlock,
+  };
+
   return {
+    bindDeclarative(root) {
+      const resolved = resolveRoot(root);
+      return resolved === null
+        ? noop
+        : bindDeclarativeListener(resolved, target);
+    },
+    bindUnlock(root) {
+      const resolved = resolveRoot(root);
+      return resolved === null ? noop : bindUnlockListener(resolved, target);
+    },
     dispose,
     has(name) {
       return sounds.has(name);

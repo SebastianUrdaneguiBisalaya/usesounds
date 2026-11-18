@@ -1,3 +1,4 @@
+export type { DeclarativeRoot } from "./declarative.js";
 export type {
   SoundEngine,
   SoundEngineOptions,
